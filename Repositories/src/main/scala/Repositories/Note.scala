@@ -30,7 +30,7 @@ object Notes {
   val dropQuery = table.schema.drop
 }
 
-class UserRepository(db: Database) {
+class NoteRepository(db: Database) {
   val noteTableQuery = Notes.table
 
   def create(note: Note): Future[Note] =

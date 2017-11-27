@@ -22,7 +22,7 @@ object Users {
   val dropQuery = table.schema.drop
 }
 
-class NoteRepository(db: Database) {
+class UserRepository(db: Database) {
   val userTableQuery = Users.table
 
   def create(user: User): Future[User] =
