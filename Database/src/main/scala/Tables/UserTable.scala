@@ -1,0 +1,5 @@
+package Tables
+
+class UserTable {
+
+}
