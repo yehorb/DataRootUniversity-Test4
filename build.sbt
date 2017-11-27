@@ -6,7 +6,7 @@ val globalSettings = Seq[SettingsDefinition](
 val Model = project.in(file("Model")).
   settings(globalSettings: _*)
 
-val Database = project.in(file("Database")).
+val Repositories = project.in(file("Repositories")).
   settings(globalSettings: _*).
   dependsOn(Model).
   settings(
@@ -20,7 +20,7 @@ val Database = project.in(file("Database")).
 
 val Core = project.in(file("Core")).
   settings(globalSettings: _*).
-  dependsOn(Model, Database)
+  dependsOn(Model, Repositories)
 
 val CommandLineUI = project.in(file("CommandLineUI")).
   settings(globalSettings: _*).
