@@ -5,14 +5,18 @@ import UIState.UIState
 import org.rogach.scallop.{ScallopConf, ScallopOption}
 
 class NoteView(parent: AuthorizedUser, note: Note) extends UIState {
-  override val name: String = s"Note [${note.noteId}] by [${parent.username}]"
+  override val name: String = s"Note [${note.noteId.get}] by [${parent.username}]. Type 'help' to view available commands. Type 'exit' to exit."
 
   override def help(): (UIState, String) = (
     this,
-    """view note -
-      |update note - create new user with provided username and password.
-      |delete note - delete current user and all of his notes.
-      |go back - change password for current user.""".stripMargin
+    """view note
+      |         - print all of the note contents.
+      |update note [-p|--priority <note_priority>] [-h|--header <note_header>] [-c|--contents <note_contents>] [-d|--done]
+      |         - update specified note with optional data. Priority is number from 1 to 5. -d|--done flips "done" flag (e.g false -> true).
+      |delete note
+      |         - deletes this note.
+      |go back
+      |         - go back to Authorized User menu.""".stripMargin
   )
 
   override val operations: Map[String, Map[String, String => (UIState, String)]] = Map(
@@ -56,6 +60,7 @@ class NoteView(parent: AuthorizedUser, note: Note) extends UIState {
         contents = parsed.contents.getOrElse(List(note.contents)).mkString(" "),
         priority = parsed.priority.getOrElse(note.priority),
         done = if (parsed.done.getOrElse(false)) !note.done else note.done,
+        edited = java.time.LocalDateTime.now()
       )
       if (Operations.updateNote(editedNote))
         (new NoteView(parent, editedNote), "Note successfully updated")

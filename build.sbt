@@ -1,5 +1,4 @@
 val globalSettings = Seq[SettingsDefinition](
-  fork in run := true,
   version := "0.1",
   scalaVersion := "2.12.4"
 )

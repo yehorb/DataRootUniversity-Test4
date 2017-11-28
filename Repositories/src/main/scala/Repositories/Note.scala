@@ -36,7 +36,7 @@ class NoteRepository(db: Database) {
     db.run(noteTableQuery returning noteTableQuery += note)
 
   def readAll(userId: Long): Future[Seq[Note]] =
-    db.run(noteTableQuery.filter(_.userId === userId).sortBy( note => (note.done.desc, note.priority, note.edited.desc) ).result)
+    db.run(noteTableQuery.filter(_.userId === userId).sortBy( note => (note.done.asc, note.priority.desc, note.edited.desc) ).result)
 
   def readById(noteId: Long): Future[Option[Note]] =
     db.run(noteTableQuery.filter(_.noteId === noteId).result.headOption)

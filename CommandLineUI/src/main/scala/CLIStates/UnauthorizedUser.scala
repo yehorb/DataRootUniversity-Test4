@@ -5,12 +5,14 @@ import Model.User
 import org.rogach.scallop.{ScallopConf, ScallopOption}
 
 class UnauthorizedUser extends UIState {
-  override val name: String = "Unauthorized User. Type \'help\' to view available commands. Type \'exit\' to exit."
+  override val name: String = "Unauthorized User. Type 'help' to view available commands. Type 'exit' to exit."
 
   override def help(): (UIState, String) = (
     this,
-    """user new username password - create new user with provided username and password.
-      |user login username password - login to existing account.""".stripMargin
+    """user new <username> <password>
+      |         - create new user with provided username and password.
+      |user login <username> <password>
+      |         - login to existing account.""".stripMargin
   )
 
   override val operations: Map[String, Map[String, String => (UIState, String)]] = Map(
@@ -32,10 +34,10 @@ class UnauthorizedUser extends UIState {
     val args = str.split(' ')
     try {
       val userData = new userArgs(args)
-      if (Operations.createNewUser(User(None, userData.username.toOption.get, userData.password.toOption.get)))
-        (this, s"User ${userData.username} successfully created.")
+      if (Operations.createNewUser(User(None, userData.username.getValue, userData.password.getValue)))
+        (this, s"User ${userData.username.getValue} successfully created.")
       else
-        (this, s"Username ${userData.username} already exists.")
+        (this, s"Username ${userData.username.getValue} already exists.")
     } catch {
       case _: Throwable =>
         (this, "Please supply valid username and password.")
@@ -46,7 +48,7 @@ class UnauthorizedUser extends UIState {
     val args = str.split(' ')
     try {
       val userData = new userArgs(args)
-      val maybeUser = Operations.login(User(None, userData.username.toOption.get, userData.password.toOption.get))
+      val maybeUser = Operations.login(User(None, userData.username.getValue, userData.password.getValue))
       if (maybeUser.isDefined)
         (new AuthorizedUser(maybeUser.get), "Login successful.")
       else

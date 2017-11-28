@@ -6,19 +6,27 @@ import org.rogach.scallop.{ScallopConf, ScallopOption}
 
 class AuthorizedUser(user: User) extends UIState {
   val username = s"Authorized User ${user.username}"
-  override val name: String = s"$username. Type \'help\' to view available commands. Type \'exit\' to exit."
+  override val name: String = s"$username. Type 'help' to view available commands. Type 'exit' to exit."
 
   override def help(): (UIState, String) = (
     this,
-    """user logout - create new user with provided username and password.
-      |user delete - delete current user and all of his notes.
-      |user password oldPassword newPassword  - change password for current user.
+    """user logout
+      |         - self explanatory.
+      |user delete
+      |         - delete current user and all of his notes.
+      |user password <old_password> <new_password>
+      |         - change password for current user.
       |
       |notes list
-      |notes view noteID
-      |note new
-      |note delete
-      |note update""".stripMargin
+      |         - list of all the notes by this user in format | note_id | is_done | priority | last_edited | header | contents |.
+      |notes view <note_id>
+      |         - view specified note in details.
+      |note new -p|--priority <note_priority> -h|--header <note_header> -c|--contents <note_contents>
+      |         - create new note for current user. Priority is number from 1 to 5.
+      |note update -n|--noteId <note_id> [-p|--priority <note_priority>] [-h|--header <note_header>] [-c|--contents <note_contents>] [-d|--done]
+      |         - update specified note with optional data. Priority is number from 1 to 5. -d|--done flips "done" flag (e.g false -> true).
+      |note delete -n|--noteId <note_id>
+      |         - deletes specified note.""".stripMargin
   )
 
   override val operations: Map[String, Map[String, String => (UIState, String)]] = Map(
@@ -143,6 +151,7 @@ class AuthorizedUser(user: User) extends UIState {
           contents = parsed.contents.getOrElse(List(realNote.contents)).mkString(" "),
           priority = parsed.priority.getOrElse(realNote.priority),
           done = if (parsed.done.getOrElse(false)) !realNote.done else realNote.done,
+          edited = java.time.LocalDateTime.now()
         )
         if (Operations.updateNote(editedNote))
           (this, "Note successfully updated")
