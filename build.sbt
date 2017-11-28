@@ -32,6 +32,3 @@ val CommandLineUI = project.in(file("CommandLineUI")).
 val Application = project.in(file("Application")).
   settings(globalSettings: _*).
   dependsOn(CommandLineUI, Core)
-
-val root = Project("DataRootUniversity-Test4", file(".")).
-  aggregate(Application)
