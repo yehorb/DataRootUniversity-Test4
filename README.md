@@ -1,6 +1,8 @@
 # DataRootUniversity-Test4
 Data Root University Test 4 - Console TODO app.  
-Run it with sbt commands:  
-    project Application
-    compile
-    run
+Run it with _**sbt**_ commands:  
+```scala
+project Application
+compile
+run
+```
