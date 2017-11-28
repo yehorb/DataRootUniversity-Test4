@@ -28,11 +28,12 @@ class UserRepository(db: Database) {
   def create(user: User): Future[User] =
     db.run(userTableQuery returning userTableQuery += user)
 
-  def readExists(username: String): Future[Boolean] =
+  def usernameExists(username: String): Future[Boolean] =
     db.run(userTableQuery.filter(_.username === username).exists.result)
 
-  def readByName(username: String): Future[Option[User]] =
-    db.run(userTableQuery.filter(_.username === username).result.headOption)
+  def readUser(user: User): Future[Option[User]] =
+    db.run(userTableQuery.filter{
+      userInDb => userInDb.username === user.username && userInDb.password === user.password }.result.headOption )
 
   def update(user: User): Future[Int] =
     db.run(userTableQuery.filter(_.userId === user.userId).update(user))

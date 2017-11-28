@@ -9,7 +9,6 @@ package object Model {
                   userId: Long,
                   header: String,
                   contents: String,
-                  created: LocalDateTime,
                   edited: LocalDateTime,
                   priority: Int,
                   done: Boolean)

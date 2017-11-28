@@ -12,14 +12,13 @@ class NoteTable(tag: Tag) extends Table[Note](tag, "Note") {
   def userId   = column[Long]("user_id")
   def header   = column[String]("header")
   def contents = column[String]("contents")
-  def created  = column[LocalDateTime]("created")
   def edited   = column[LocalDateTime]("edited")
   def priority = column[Int]("priority")
   def done     = column[Boolean]("done")
 
   def userIdFk = foreignKey("user_id_fk", userId, TableQuery[UserTable])(_.userId, onDelete = ForeignKeyAction.Cascade)
 
-  def * = (noteId.?, userId, header, contents, created, edited, priority, done).mapTo[Note]
+  def * = (noteId.?, userId, header, contents, edited, priority, done).mapTo[Note]
 }
 
 object Notes {
@@ -37,7 +36,7 @@ class NoteRepository(db: Database) {
     db.run(noteTableQuery returning noteTableQuery += note)
 
   def readAll(userId: Long): Future[Seq[Note]] =
-    db.run(noteTableQuery.filter(_.userId === userId).result)
+    db.run(noteTableQuery.filter(_.userId === userId).sortBy( note => (note.done.desc, note.priority, note.edited.desc) ).result)
 
   def readById(noteId: Long): Future[Option[Note]] =
     db.run(noteTableQuery.filter(_.noteId === noteId).result.headOption)

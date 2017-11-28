@@ -24,11 +24,14 @@ val Core = project.in(file("Core")).
 
 val CommandLineUI = project.in(file("CommandLineUI")).
   settings(globalSettings: _*).
-  dependsOn(Core)
+  dependsOn(Core).
+  settings(
+    libraryDependencies += "org.rogach" %% "scallop" % "3.1.1"
+  )
 
 val Application = project.in(file("Application")).
   settings(globalSettings: _*).
-  dependsOn(CommandLineUI)
+  dependsOn(CommandLineUI, Core)
 
 val root = Project("DataRootUniversity-Test4", file(".")).
   aggregate(Application)
