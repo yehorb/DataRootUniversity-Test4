@@ -1,6 +1,7 @@
 import org.rogach.scallop.ScallopOption
 
 package object CLIStates {
-  implicit def scallopOptionToValue[T](scallopOption: ScallopOption[T]): T =
-    scallopOption.toOption.get
+  implicit class scallopOptionConversions[T](scallopOption: ScallopOption[T]) {
+    def getValue: T = scallopOption.toOption.get
+  }
 }

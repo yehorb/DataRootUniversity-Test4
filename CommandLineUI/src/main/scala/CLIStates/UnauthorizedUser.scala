@@ -10,9 +10,7 @@ class UnauthorizedUser extends UIState {
   override def help(): (UIState, String) = (
     this,
     """user new username password - create new user with provided username and password.
-      |user login username password - login to existing account.
-      |
-      |""".stripMargin
+      |user login username password - login to existing account.""".stripMargin
   )
 
   override val operations: Map[String, Map[String, String => (UIState, String)]] = Map(

@@ -18,9 +18,7 @@ class AuthorizedUser(user: User) extends UIState {
       |notes view noteID
       |note new
       |note delete
-      |note update
-      |
-      |""".stripMargin
+      |note update""".stripMargin
   )
 
   override val operations: Map[String, Map[String, String => (UIState, String)]] = Map(
@@ -57,7 +55,7 @@ class AuthorizedUser(user: User) extends UIState {
     try {
       val passData = new passwordArgs(args)
       if (passData.oldPassword.toOption.get == user.password) {
-        val newUser = user.copy(password = passData.newPassword)
+        val newUser = user.copy(password = passData.newPassword.getValue)
         if (Operations.updateUser(newUser))
           (new AuthorizedUser(newUser), "Password changed successfully")
         else
@@ -77,10 +75,16 @@ class AuthorizedUser(user: User) extends UIState {
       (this, "This user has no notes")
     else {
       def ellipsize(str: String, len: Int): String =
-        str.take(len - 3).concat("...")
+        if (str.length < len)
+          str.padTo(len, ' ')
+        else if (str.length == len)
+          str
+        else
+          str.take(len - 3).concat("...")
+
       val noteString =
         notes.
-          map( note => f"| ${note.noteId.get}%3d | ${if (note.done) '+' else  '-'} | ${note.priority} | ${note.edited} | ${ellipsize(note.header, 10)} | ${ellipsize(note.contents, 10)} |" ).
+          map( note => f"| ${note.noteId.get}%3d | ${if (note.done) '+' else  '-'} | ${note.priority} | ${note.edited.toLocalDate} | ${ellipsize(note.header, 15)} | ${ellipsize(note.contents, 30)} |" ).
           mkString("\n")
       (this, noteString)
     }
@@ -89,16 +93,24 @@ class AuthorizedUser(user: User) extends UIState {
   class newNoteArgs(args: Seq[String]) extends ScallopConf(args) {
     override def onError(e: Throwable): Unit =
       throw e
-    val priority: ScallopOption[Int] = trailArg[Int](required = true, validate = (1 to 5).contains )
-    val header: ScallopOption[String] = trailArg[String](required = true)
-    val contents: ScallopOption[String] = trailArg[String](required = true)
+    val priority: ScallopOption[Int] = opt[Int](required = true, validate = (1 to 5).contains )
+    val header: ScallopOption[List[String]] = opt[List[String]](required = true)
+    val contents: ScallopOption[List[String]] = opt[List[String]](required = true)
     verify()
   }
   def notesNew(str: String): (UIState, String) = {
     val args = str.split(' ')
     try {
       val parsed = new newNoteArgs(args)
-      val newNote = Note(None, user.userId.get, parsed.header, parsed.contents, java.time.LocalDateTime.now(), parsed.priority, done = false)
+      val newNote = Note(
+        None,
+        user.userId.get,
+        parsed.header.getValue.mkString(" "),
+        parsed.contents.getValue.mkString(" "),
+        java.time.LocalDateTime.now(),
+        parsed.priority.getValue,
+        done = false
+      )
       if (Operations.addNote(newNote))
         (this, "New note successfully created")
       else
@@ -114,8 +126,8 @@ class AuthorizedUser(user: User) extends UIState {
       throw e
     val noteId: ScallopOption[Long] = opt[Long](required = true)
     val priority: ScallopOption[Int] = opt[Int](validate = (1 to 5).contains)
-    val header: ScallopOption[String] = opt[String]()
-    val contents: ScallopOption[String] = opt[String]()
+    val header: ScallopOption[List[String]] = opt[List[String]]()
+    val contents: ScallopOption[List[String]] = opt[List[String]]()
     val done: ScallopOption[Boolean] = opt[Boolean]()
     verify()
   }
@@ -123,14 +135,14 @@ class AuthorizedUser(user: User) extends UIState {
     val args = str.split(' ')
     try {
       val parsed = new editNoteArgs(args)
-      val maybeNote = Operations.readNote(parsed.noteId)
+      val maybeNote = Operations.readNote(parsed.noteId.getValue)
       if (maybeNote.isDefined) {
         val realNote = maybeNote.get
         val editedNote = realNote.copy(
-          header = parsed.header.getOrElse(realNote.header),
-          contents = parsed.contents.getOrElse(realNote.contents),
+          header = parsed.header.getOrElse(List(realNote.header)).mkString(" "),
+          contents = parsed.contents.getOrElse(List(realNote.contents)).mkString(" "),
           priority = parsed.priority.getOrElse(realNote.priority),
-          done = parsed.done.getOrElse(realNote.done),
+          done = if (parsed.done.getOrElse(false)) !realNote.done else realNote.done,
         )
         if (Operations.updateNote(editedNote))
           (this, "Note successfully updated")
@@ -155,7 +167,7 @@ class AuthorizedUser(user: User) extends UIState {
     val args = str.split(' ')
     try {
       val parsed = new noteIdArgs(args)
-      if (Operations.deleteNote(parsed.noteId))
+      if (Operations.deleteNote(parsed.noteId.getValue))
         (this, "Note successfully deleted")
       else
         (this, "Something gone wrong")
@@ -170,7 +182,7 @@ class AuthorizedUser(user: User) extends UIState {
     val args = str.split(' ')
     try {
       val parsed = new noteIdArgs(args)
-      val maybeNote = Operations.readNote(parsed.noteId)
+      val maybeNote = Operations.readNote(parsed.noteId.getValue)
       if (maybeNote.isDefined) {
         val realNote = maybeNote.get
         (new NoteView(this, realNote), "")

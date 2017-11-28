@@ -12,8 +12,7 @@ class NoteView(parent: AuthorizedUser, note: Note) extends UIState {
     """view note -
       |update note - create new user with provided username and password.
       |delete note - delete current user and all of his notes.
-      |go back - change password for current user.
-      |""".stripMargin
+      |go back - change password for current user.""".stripMargin
   )
 
   override val operations: Map[String, Map[String, String => (UIState, String)]] = Map(
@@ -42,10 +41,9 @@ class NoteView(parent: AuthorizedUser, note: Note) extends UIState {
   class editNoteArgs(args: Seq[String]) extends ScallopConf(args) {
     override def onError(e: Throwable): Unit =
       throw e
-    val noteId: ScallopOption[Long] = opt[Long](required = true)
     val priority: ScallopOption[Int] = opt[Int](validate = (1 to 5).contains)
-    val header: ScallopOption[String] = opt[String]()
-    val contents: ScallopOption[String] = opt[String]()
+    val header: ScallopOption[List[String]] = opt[List[String]]()
+    val contents: ScallopOption[List[String]] = opt[List[String]]()
     val done: ScallopOption[Boolean] = opt[Boolean]()
     verify()
   }
@@ -54,10 +52,10 @@ class NoteView(parent: AuthorizedUser, note: Note) extends UIState {
     try {
       val parsed = new editNoteArgs(args)
       val editedNote = note.copy(
-        header = parsed.header.getOrElse(note.header),
-        contents = parsed.contents.getOrElse(note.contents),
+        header = parsed.header.getOrElse(List(note.header)).mkString(" "),
+        contents = parsed.contents.getOrElse(List(note.contents)).mkString(" "),
         priority = parsed.priority.getOrElse(note.priority),
-        done = parsed.done.getOrElse(note.done),
+        done = if (parsed.done.getOrElse(false)) !note.done else note.done,
       )
       if (Operations.updateNote(editedNote))
         (new NoteView(parent, editedNote), "Note successfully updated")

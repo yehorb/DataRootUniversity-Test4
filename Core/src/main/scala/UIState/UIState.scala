@@ -15,6 +15,7 @@ trait UIState {
   }
 
   def exit(): Unit = {
+    Repositories.db.close()
     System.exit(0)
   }
 }
